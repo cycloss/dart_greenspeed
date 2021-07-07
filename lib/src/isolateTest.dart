@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 class Downloader {
   final receivePort = ReceivePort();
+
   final isolates = <Isolate>[];
   Future<void> start() async {
     for (var i = 0; i < 6; i++) {

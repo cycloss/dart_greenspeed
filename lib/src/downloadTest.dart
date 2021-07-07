@@ -1,34 +1,38 @@
 import 'dart:async';
 import 'dart:io';
 
-// TODO add getIP to display distance and isp
-
 class DownloadTest {
   StreamController<double> mbpsController = StreamController();
   StreamController<double> percentController = StreamController();
 
-  bool graceTimeOver = false;
-  late DateTime startTime;
-  double secondsElapsed = 0;
-  final ckSize = 100;
-  final graceTime = 1;
-  final dlTime = 10;
-  final client = HttpClient();
-  final String serverAddress;
+  late bool _graceTimeOver;
+  late DateTime _startTime;
+  late double _secondsElapsed;
+  late int _bytesDownloaded;
 
-  DownloadTest({required this.serverAddress});
+  final _ckSize = 100;
+  final _graceTime = 1;
+  final double _dlTime;
+  final _client = HttpClient();
+  final String _serverAddress;
+
+  Stream<double> get mbpsStream => mbpsController.stream;
+  Stream<double> get percentCompleteStream => percentController.stream;
+
+  DownloadTest({required String serverAddress, double downloadTime = 10})
+      : _serverAddress = serverAddress,
+        _dlTime = downloadTime;
 
   Future<void> start() async {
-    var resp = await makeRequest();
-    startTime = DateTime.now();
-    var totalBytes = 0;
-    await for (var data in resp) {
-      if (graceTimeOver) {
-        totalBytes += data.length;
+    _reset();
+    var resp = await _makeRequest();
 
-        var mbps = calculateSpeed(totalBytes);
+    await for (var data in resp) {
+      if (_graceTimeOver) {
+        _bytesDownloaded += data.length;
+        var mbps = _calculateSpeed();
         mbpsController.add(mbps);
-        var percentDone = calculatePercentDone();
+        var percentDone = _calculatePercentDone();
         if (percentDone >= 100) {
           percentController.add(100);
           break;
@@ -38,39 +42,49 @@ class DownloadTest {
       } else {
         _checkGraceTime();
       }
-      updateElapsed();
-    }
-
-    client.close();
-  }
-
-  void _checkGraceTime() {
-    if (!graceTimeOver) {
-      if (secondsElapsed >= graceTime) {
-        graceTimeOver = true;
-        startTime = DateTime.now();
-      }
+      _updateElapsed();
     }
   }
 
-  Future<HttpClientResponse> makeRequest() async {
-    var req = await client
-        .getUrl(Uri.parse('$serverAddress/garbage.php?ckSize=$ckSize'));
+  void _reset() {
+    _graceTimeOver = false;
+    _startTime = DateTime.now();
+    _secondsElapsed = 0;
+    _bytesDownloaded = 0;
+  }
+
+  Future<HttpClientResponse> _makeRequest() async {
+    var req = await _client
+        .getUrl(Uri.parse('$_serverAddress/garbage.php?ckSize=$_ckSize'));
     return req.close();
   }
 
-  double calculatePercentDone() {
-    return (secondsElapsed / dlTime) * 100;
-  }
-
-  double calculateSpeed(int totalDownloaded) {
-    var megabits = (totalDownloaded / 1000000) * 8;
-    var seconds = secondsElapsed;
+  double _calculateSpeed() {
+    var megabits = (_bytesDownloaded / 1000000) * 8;
+    var seconds = _secondsElapsed;
     print(seconds);
     return megabits / seconds;
   }
 
-  void updateElapsed() {
-    secondsElapsed = DateTime.now().difference(startTime).inMilliseconds / 1000;
+  double _calculatePercentDone() {
+    return (_secondsElapsed / _dlTime) * 100;
+  }
+
+  void _updateElapsed() {
+    _secondsElapsed =
+        DateTime.now().difference(_startTime).inMilliseconds / 1000;
+  }
+
+  void _checkGraceTime() {
+    if (!_graceTimeOver) {
+      if (_secondsElapsed >= _graceTime) {
+        _graceTimeOver = true;
+        _startTime = DateTime.now();
+      }
+    }
+  }
+
+  void close() {
+    _client.close();
   }
 }

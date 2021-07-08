@@ -47,6 +47,8 @@ class DownloadTest {
   }
 
   void _reset() {
+    percentController.add(0);
+    mbpsController.add(0);
     _graceTimeOver = false;
     _startTime = DateTime.now();
     _secondsElapsed = 0;
@@ -62,7 +64,6 @@ class DownloadTest {
   double _calculateSpeed() {
     var megabits = (_bytesDownloaded / 1000000) * 8;
     var seconds = _secondsElapsed;
-    print(seconds);
     return megabits / seconds;
   }
 

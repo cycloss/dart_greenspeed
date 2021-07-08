@@ -4,4 +4,5 @@
 library speed_test;
 
 export 'src/downloadTest.dart';
+export 'src/pingJitterTest.dart';
 export 'src/uploadTest.dart';

@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+// TODO add abort method
 class DownloadTest {
-  StreamController<double> mbpsController = StreamController();
-  StreamController<double> percentController = StreamController();
+  final StreamController<double> _mbpsController = StreamController();
+  final StreamController<double> _percentController = StreamController();
 
   late bool _graceTimeOver;
   late DateTime _startTime;
@@ -16,39 +17,41 @@ class DownloadTest {
   final _client = HttpClient();
   final String _serverAddress;
 
-  Stream<double> get mbpsStream => mbpsController.stream;
-  Stream<double> get percentCompleteStream => percentController.stream;
+  Stream<double> get mbpsStream => _mbpsController.stream;
+  Stream<double> get percentCompleteStream => _percentController.stream;
 
   DownloadTest({required String serverAddress, double downloadTime = 10})
       : _serverAddress = serverAddress,
         _dlTime = downloadTime;
 
+  /// Starts the download test.
+  /// Must not be called after `close` has been called
   Future<void> start() async {
     _reset();
     var resp = await _makeRequest();
 
     await for (var data in resp) {
+      _updateElapsed();
       if (_graceTimeOver) {
         _bytesDownloaded += data.length;
         var mbps = _calculateSpeed();
-        mbpsController.add(mbps);
+        _mbpsController.add(mbps);
         var percentDone = _calculatePercentDone();
-        if (percentDone >= 100) {
-          percentController.add(100);
+        if (percentDone >= 1) {
+          _percentController.add(1);
           break;
         } else {
-          percentController.add(percentDone);
+          _percentController.add(percentDone);
         }
       } else {
         _checkGraceTime();
       }
-      _updateElapsed();
     }
   }
 
   void _reset() {
-    percentController.add(0);
-    mbpsController.add(0);
+    _percentController.add(0);
+    _mbpsController.add(0);
     _graceTimeOver = false;
     _startTime = DateTime.now();
     _secondsElapsed = 0;
@@ -68,7 +71,7 @@ class DownloadTest {
   }
 
   double _calculatePercentDone() {
-    return (_secondsElapsed / _dlTime) * 100;
+    return _secondsElapsed / _dlTime;
   }
 
   void _updateElapsed() {
@@ -86,6 +89,8 @@ class DownloadTest {
   }
 
   void close() {
+    _mbpsController.close();
+    _percentController.close();
     _client.close();
   }
 }

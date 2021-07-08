@@ -1,19 +1,43 @@
-A library for Dart developers.
+# Dart Librespeed
 
-## Usage
+A speed test utility to connect and test [Librespeed](https://github.com/librespeed/speedtest) servers built for use in a Flutter app.
 
-A simple usage example:
+## Installing
 
-```dart
-import 'package:speed_test/speed_test.dart';
+This library is not available on pub.dev, so add the following to your `pubspec.yaml` dependencies:
 
-main() {
-  var awesome = new Awesome();
-}
+```yaml
+dart_librespeed:
+    git:
+      url: https://github.com/lucas979797/dart_librespeed
+      ref: main
 ```
 
-## Features and bugs
+## Simple Usage Example
 
-Please file feature requests and bugs at the [issue tracker][tracker].
+```dart
+import 'package:dart_librespeed/speed_test.dart';
 
-[tracker]: http://example.com/issues/replaceme
+void main() async {
+  var dlTest =
+      DownloadTest(serverAddress: 'http://mydomain.com');
+  dlTest.mbpsStream.listen((event) {
+    print(event);
+  });
+  await dlTest.start();
+
+  var ulTest = UploadTest(serverAddress: 'http://mydomain.com');
+  ulTest.mbpsStream.listen(print);
+  await ulTest.start();
+
+  var pingTest =
+      PingJitterTest(serverAddress: 'http://mydomain.com');
+  pingTest.pingStream.listen((event) {
+    print('${event.toStringAsFixed(2)}ms ping');
+  });
+  pingTest.jitterStream.listen((event) {
+    print('${event.toStringAsFixed(2)}ms jitter');
+  });
+  await pingTest.start();
+}
+```

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:speed_test/src/utilities.dart';
+import 'package:dart_librespeed/src/utilities.dart';
 
 class UploadTest {
   final StreamController<double> _mbpsController = StreamController();

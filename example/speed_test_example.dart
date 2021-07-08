@@ -1,5 +1,4 @@
-import 'package:speed_test/speed_test.dart';
-import 'package:speed_test/src/pingJitterTest.dart';
+import 'package:dart_librespeed/speed_test.dart';
 
 void main() async {
   var dlTest =

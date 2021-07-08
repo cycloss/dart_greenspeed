@@ -1,7 +1,7 @@
 /// Support for doing something awesome.
 ///
 /// More dartdocs go here.
-library speed_test;
+library dart_librespeed;
 
 export 'src/downloadTest.dart';
 export 'src/pingJitterTest.dart';

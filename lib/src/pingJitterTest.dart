@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dart_librespeed/src/aborter.dart';
+import 'result.dart';
 
-class PingJitterTest with Aborter {
-  final StreamController<double> _pingController = StreamController();
-  final StreamController<double> _jitterController = StreamController();
-  final StreamController<double> _percentController = StreamController();
+class PingJitterTest {
+  final StreamController<Result> _pingController = StreamController();
+  final StreamController<Result> _jitterController = StreamController();
+  final StreamController<Result> _percentController = StreamController();
 
   late bool _graceTimeOver;
   late DateTime _startTime;
@@ -26,9 +26,9 @@ class PingJitterTest with Aborter {
 
   final _rand = Random();
 
-  Stream<double> get pingStream => _pingController.stream;
-  Stream<double> get jitterStream => _jitterController.stream;
-  Stream<double> get percentCompleteStream => _percentController.stream;
+  Stream<Result> get pingStream => _pingController.stream;
+  Stream<Result> get jitterStream => _jitterController.stream;
+  Stream<Result> get percentCompleteStream => _percentController.stream;
 
   PingJitterTest({required String serverAddress, double pingTime = 5})
       : _serverAddress = serverAddress,
@@ -38,6 +38,9 @@ class PingJitterTest with Aborter {
   /// Must not be called after `close` has been called
   Future<void> start() async {
     _reset();
+    var pingResult = Result();
+    var jitterResult = Result();
+    var percentResult = Result();
     while (true) {
       var pingStart = DateTime.now();
       var req = await _makeRequest();
@@ -47,25 +50,29 @@ class PingJitterTest with Aborter {
         throw Exception(
             'Server fully operational, status code: ${resp.statusCode}');
       }
-      _updateElapsed();
-      if (abort) {
+      if (pingResult.abort || jitterResult.abort || percentResult.abort) {
         break;
       }
+      _updateElapsed();
       if (_graceTimeOver) {
         var currentPing = pingEnd.difference(pingStart).inMicroseconds / 1000;
         var percentDone = _calculatePercentDone();
         _pingAverage = _calculateAveragePing(currentPing);
         _jitterAverge = _calculateJitter(currentPing);
-
         _lastPing = currentPing;
         _pingCount++;
-        _pingController.add(_pingAverage);
-        _jitterController.add(_jitterAverge);
+        pingResult.value = _pingAverage;
+        jitterResult.value = _jitterAverge;
+
+        _pingController.add(pingResult);
+        _jitterController.add(jitterResult);
         if (percentDone >= 1) {
-          _percentController.add(1);
+          percentResult.value = 1;
+          _percentController.add(percentResult);
           break;
         } else {
-          _percentController.add(percentDone);
+          percentResult.value = percentDone;
+          _percentController.add(percentResult);
         }
       } else {
         _checkGraceTime();
@@ -74,8 +81,9 @@ class PingJitterTest with Aborter {
   }
 
   void _reset() {
-    _percentController.add(0);
-    _pingController.add(0);
+    _pingController.add(Result());
+    _jitterController.add(Result());
+    _percentController.add(Result());
     _graceTimeOver = false;
     _startTime = DateTime.now();
     _secondsElapsed = 0;

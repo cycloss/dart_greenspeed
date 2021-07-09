@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dart_librespeed/src/aborter.dart';
+import 'package:dart_librespeed/speed_test.dart';
 
 // TODO add abort method
-class DownloadTest with Aborter {
-  final StreamController<double> _mbpsController = StreamController();
-  final StreamController<double> _percentController = StreamController();
+class DownloadTest {
+  final StreamController<Result> _mbpsController = StreamController();
+  final StreamController<Result> _percentController = StreamController();
 
   late bool _graceTimeOver;
   late DateTime _startTime;
@@ -19,8 +19,8 @@ class DownloadTest with Aborter {
   final _client = HttpClient();
   final String _serverAddress;
 
-  Stream<double> get mbpsStream => _mbpsController.stream;
-  Stream<double> get percentCompleteStream => _percentController.stream;
+  Stream<Result> get mbpsStream => _mbpsController.stream;
+  Stream<Result> get percentCompleteStream => _percentController.stream;
 
   DownloadTest({required String serverAddress, double downloadTime = 10})
       : _serverAddress = serverAddress,
@@ -31,22 +31,26 @@ class DownloadTest with Aborter {
   Future<void> start() async {
     _reset();
     var resp = await _makeRequest();
-
+    var mbpsResult = Result();
+    var percentResult = Result();
     await for (var data in resp) {
-      if (abort) {
+      if (mbpsResult.abort || percentResult.abort) {
         break;
       }
       _updateElapsed();
       if (_graceTimeOver) {
         _bytesDownloaded += data.length;
-        var mbps = _calculateSpeed();
-        _mbpsController.add(mbps);
+        mbpsResult.value = _calculateSpeed();
+        _mbpsController.add(mbpsResult);
         var percentDone = _calculatePercentDone();
+
         if (percentDone >= 1) {
-          _percentController.add(1);
+          percentResult.value = 1;
+          _percentController.add(percentResult);
           break;
         } else {
-          _percentController.add(percentDone);
+          percentResult.value = percentDone;
+          _percentController.add(percentResult);
         }
       } else {
         _checkGraceTime();
@@ -55,9 +59,8 @@ class DownloadTest with Aborter {
   }
 
   void _reset() {
-    resetAbort();
-    _percentController.add(0);
-    _mbpsController.add(0);
+    _percentController.add(Result());
+    _mbpsController.add(Result());
     _graceTimeOver = false;
     _startTime = DateTime.now();
     _secondsElapsed = 0;

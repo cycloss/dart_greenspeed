@@ -3,12 +3,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_librespeed/src/aborter.dart';
 import 'package:dart_librespeed/src/utilities.dart';
 
-class UploadTest with Aborter {
-  final StreamController<double> _mbpsController = StreamController();
-  final StreamController<double> _percentController = StreamController();
+import 'result.dart';
+
+class UploadTest {
+  final StreamController<Result> _mbpsController = StreamController();
+  final StreamController<Result> _percentController = StreamController();
 
   late bool _graceTimeOver;
   late DateTime _startTime;
@@ -22,8 +23,8 @@ class UploadTest with Aborter {
   final _client = HttpClient();
   final String _serverAddress;
 
-  Stream<double> get mbpsStream => _mbpsController.stream;
-  Stream<double> get percentCompleteStream => _percentController.stream;
+  Stream<Result> get mbpsStream => _mbpsController.stream;
+  Stream<Result> get percentCompleteStream => _percentController.stream;
 
   UploadTest({required String serverAddress, double uploadTime = 10})
       : _serverAddress = serverAddress,
@@ -35,28 +36,31 @@ class UploadTest with Aborter {
     _reset();
     var post = await _makePost();
     var bytes = generateRandomBytes(_ckSize * 1000000);
-
+    var mbpsResult = Result();
+    var percentResult = Result();
     for (var offset = 0;
         offset + _bufferSizeBytes < bytes.buffer.lengthInBytes;
         offset += _bufferSizeBytes) {
       var byteView = Uint8List.view(bytes.buffer, offset, _bufferSizeBytes);
       post.add(byteView);
       await post.flush(); // wait until data accepted by server
-      if (abort) {
+      if (mbpsResult.abort || percentResult.abort) {
         break;
       }
       _updateElapsed();
       if (_graceTimeOver) {
         _bytesUploaded += _bufferSizeBytes;
-        var mbps = _calculateSpeed();
-        _mbpsController.add(mbps);
+        mbpsResult.value = _calculateSpeed();
+        _mbpsController.add(mbpsResult);
         var percentDone = _calculatePercentDone();
         if (percentDone >= 1) {
-          _percentController.add(1);
+          percentResult.value = 1;
+          _percentController.add(percentResult);
           await post.close();
           break;
         } else {
-          _percentController.add(percentDone);
+          percentResult.value = percentDone;
+          _percentController.add(percentResult);
         }
       } else {
         _checkGraceTime();
@@ -65,9 +69,8 @@ class UploadTest with Aborter {
   }
 
   void _reset() {
-    resetAbort();
-    _percentController.add(0);
-    _mbpsController.add(0);
+    _percentController.add(Result());
+    _mbpsController.add(Result());
     _graceTimeOver = false;
     _startTime = DateTime.now();
     _secondsElapsed = 0;

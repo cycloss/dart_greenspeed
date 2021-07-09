@@ -1,6 +1,8 @@
 # Dart Librespeed
 
-A speed test utility to connect and test [Librespeed](https://github.com/librespeed/speedtest) servers built for use in a Flutter app.
+A speed test utility to connect and test [Librespeed](https://github.com/librespeed/speedtest) servers. Built for use in a Flutter app.
+
+Supports testing ping (ms), jitter (ms), download speed (megabits/sec) and upload speed (megabits/sec). Also shows the percentage completetion for each test.
 
 ## Installing
 

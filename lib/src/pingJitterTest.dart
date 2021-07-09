@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-class PingJitterTest {
+import 'package:dart_librespeed/src/aborter.dart';
+
+class PingJitterTest with Aborter {
   final StreamController<double> _pingController = StreamController();
   final StreamController<double> _jitterController = StreamController();
   final StreamController<double> _percentController = StreamController();
@@ -46,6 +48,9 @@ class PingJitterTest {
             'Server fully operational, status code: ${resp.statusCode}');
       }
       _updateElapsed();
+      if (abort) {
+        break;
+      }
       if (_graceTimeOver) {
         var currentPing = pingEnd.difference(pingStart).inMicroseconds / 1000;
         var percentDone = _calculatePercentDone();

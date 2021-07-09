@@ -3,9 +3,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dart_librespeed/src/aborter.dart';
 import 'package:dart_librespeed/src/utilities.dart';
 
-class UploadTest {
+class UploadTest with Aborter {
   final StreamController<double> _mbpsController = StreamController();
   final StreamController<double> _percentController = StreamController();
 
@@ -41,6 +42,9 @@ class UploadTest {
       var byteView = Uint8List.view(bytes.buffer, offset, _bufferSizeBytes);
       post.add(byteView);
       await post.flush(); // wait until data accepted by server
+      if (abort) {
+        break;
+      }
       _updateElapsed();
       if (_graceTimeOver) {
         _bytesUploaded += _bufferSizeBytes;
@@ -61,6 +65,7 @@ class UploadTest {
   }
 
   void _reset() {
+    resetAbort();
     _percentController.add(0);
     _mbpsController.add(0);
     _graceTimeOver = false;

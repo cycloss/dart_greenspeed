@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dart_librespeed/src/aborter.dart';
+
 // TODO add abort method
-class DownloadTest {
+class DownloadTest with Aborter {
   final StreamController<double> _mbpsController = StreamController();
   final StreamController<double> _percentController = StreamController();
 
@@ -31,6 +33,9 @@ class DownloadTest {
     var resp = await _makeRequest();
 
     await for (var data in resp) {
+      if (abort) {
+        break;
+      }
       _updateElapsed();
       if (_graceTimeOver) {
         _bytesDownloaded += data.length;
@@ -50,6 +55,7 @@ class DownloadTest {
   }
 
   void _reset() {
+    resetAbort();
     _percentController.add(0);
     _mbpsController.add(0);
     _graceTimeOver = false;

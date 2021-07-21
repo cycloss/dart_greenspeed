@@ -3,26 +3,41 @@
 /// More dartdocs go here.
 library dart_librespeed;
 
-import 'package:dart_librespeed/src/isolateDownloadTest.dart';
+import 'src/downloadWorker.dart';
+import 'src/isolateTest.dart';
+import 'src/uploadWorker.dart';
 
 export 'src/pingJitterTest.dart';
 export 'src/result.dart';
-export 'src/uploadTest.dart';
 
-abstract class DownloadTest {
+abstract class Test {
   Stream<double> get mbpsStream;
   Stream<double> get percentCompleteStream;
   Future<void> start();
   Future<void> abort();
   void close();
 
-  factory DownloadTest(
+  factory Test.download(
       {required String serverAddress,
       required int updateIntervalMs,
       required int testDurationMs}) {
-    return IsolateDownloadTest(
+    var downloaderTask = DownloadWorker.startDownload;
+    return IsolatedTest(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
-        testDurationMs: testDurationMs);
+        testDurationMs: testDurationMs,
+        task: downloaderTask);
+  }
+
+  factory Test.upload(
+      {required String serverAddress,
+      required int updateIntervalMs,
+      required int testDurationMs}) {
+    var uploaderTask = UploadWorker.startUpload;
+    return IsolatedTest(
+        serverAddress: serverAddress,
+        updateIntervalMs: updateIntervalMs,
+        testDurationMs: testDurationMs,
+        task: uploaderTask);
   }
 }

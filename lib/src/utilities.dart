@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -14,7 +15,11 @@ Uint8List generateRandomBytes(int length) {
   return bytes;
 }
 
-void main() {
-  var bytes = generateRandomBytes(16);
-  print(bytes);
+class SpawnBundle {
+  final String serverAddress;
+  final SendPort sendPort;
+
+  SpawnBundle(this.serverAddress, this.sendPort);
 }
+
+enum IsolateEvent { start, abort }

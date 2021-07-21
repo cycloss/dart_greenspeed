@@ -15,7 +15,8 @@ class DownloadWorker {
     var abortCompleter = Completer();
     var startCompleter = Completer();
     var client = HttpClient();
-    _listenForEvents(channel, startCompleter, abortCompleter, client);
+    listenForEvents(channel, startCompleter, abortCompleter, client);
+    await startCompleter.future;
     while (!abortCompleter.isCompleted) {
       var resp = await _makeRequest(client, sb.serverAddress);
       if (abortCompleter.isCompleted) return;
@@ -27,28 +28,6 @@ class DownloadWorker {
         channel.sink.add(megabits);
       }
     }
-  }
-
-  static void _listenForEvents(
-      IsolateChannel<dynamic> channel,
-      Completer<dynamic> startCompleter,
-      Completer<dynamic> abortCompleter,
-      HttpClient client) {
-    // wait for signal from main isolate to stop
-    channel.stream.listen((event) {
-      if (event is! IsolateEvent) return;
-      switch (event) {
-        case IsolateEvent.start:
-          startCompleter.complete();
-          return;
-        case IsolateEvent.abort:
-          abortCompleter.complete();
-          client.close();
-          channel.sink.close();
-          print('Isolate completed');
-          return;
-      }
-    });
   }
 
   static Future<HttpClientResponse> _makeRequest(

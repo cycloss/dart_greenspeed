@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:stream_channel/isolate_channel.dart';
 
 Uint8List generateRandomBytes(int length) {
   if (length < 0) {
@@ -23,3 +27,24 @@ class SpawnBundle {
 }
 
 enum IsolateEvent { start, abort }
+
+void listenForEvents(
+    IsolateChannel<dynamic> channel,
+    Completer<dynamic> startCompleter,
+    Completer<dynamic> abortCompleter,
+    HttpClient client) {
+  // wait for signal from main isolate to stop
+  channel.stream.listen((event) {
+    if (event is! IsolateEvent) return;
+    switch (event) {
+      case IsolateEvent.start:
+        startCompleter.complete();
+        return;
+      case IsolateEvent.abort:
+        abortCompleter.complete();
+        client.close();
+        channel.sink.close();
+        return;
+    }
+  });
+}

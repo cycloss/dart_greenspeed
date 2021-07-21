@@ -25,9 +25,9 @@ class PingJitterWorker {
     while (!abortCompleter.isCompleted) {
       var pingStart = DateTime.now();
       var req = await _makeRequest(client, sb.serverAddress);
-      if (abortCompleter.isCompleted) return;
+      if (abortCompleter.isCompleted) break;
       var resp = await req.close();
-      if (abortCompleter.isCompleted) return;
+      if (abortCompleter.isCompleted) break;
       if (resp.statusCode != 200) {
         throw Exception(
             'Server not operational, status code: ${resp.statusCode}');
@@ -44,6 +44,8 @@ class PingJitterWorker {
           '${averagePing.toStringAsFixed(2)}-${averageJitter.toStringAsFixed(2)}';
       channel.sink.add(message);
     }
+    client.close();
+    await channel.sink.close();
   }
 
   static Future<HttpClientRequest> _makeRequest(

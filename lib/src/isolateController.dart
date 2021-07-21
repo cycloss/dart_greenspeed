@@ -50,7 +50,6 @@ abstract class IsolateController {
     var closed = 0;
     channels.forEach((channel) async {
       channel.sink.add(IsolateEvent.abort);
-      await channel.sink.close();
       if (++closed >= channels.length) {
         completer.complete();
       }

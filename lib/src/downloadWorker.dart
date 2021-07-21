@@ -19,15 +19,18 @@ class DownloadWorker {
     await startCompleter.future;
     while (!abortCompleter.isCompleted) {
       var resp = await _makeRequest(client, sb.serverAddress);
-      if (abortCompleter.isCompleted) return;
+      if (abortCompleter.isCompleted) break;
+      ;
       await for (var data in resp) {
-        if (abortCompleter.isCompleted) return;
+        if (abortCompleter.isCompleted) break;
         if (!startCompleter.isCompleted) continue;
         var megabits = (data.length * 8) / 1048576;
         // keep feeding results to the main isolate
         channel.sink.add(megabits);
       }
     }
+    client.close();
+    await channel.sink.close();
   }
 
   static Future<HttpClientResponse> _makeRequest(

@@ -42,8 +42,6 @@ void listenForEvents(
         return;
       case IsolateEvent.abort:
         abortCompleter.complete();
-        client.close();
-        channel.sink.close();
         return;
     }
   });

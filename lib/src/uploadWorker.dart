@@ -23,7 +23,7 @@ class UploadWorker {
     await startCompleter.future;
     while (!abortCompleter.isCompleted) {
       var postReq = await _makePost(client, sb.serverAddress);
-      if (abortCompleter.isCompleted) return;
+      if (abortCompleter.isCompleted) break;
       var bytes = generateRandomBytes(_CK_SIZE * 1000000);
       for (var offset = 0;
           offset + _BUFFER_SIZE_BYTES < bytes.buffer.lengthInBytes;
@@ -31,11 +31,13 @@ class UploadWorker {
         var byteView = Uint8List.view(bytes.buffer, offset, _BUFFER_SIZE_BYTES);
         postReq.add(byteView);
         await postReq.flush();
-        if (abortCompleter.isCompleted) return;
+        if (abortCompleter.isCompleted) break;
         channel.sink.add(_BUFFER_SIZE_MEGABITS);
-        if (abortCompleter.isCompleted) return;
+        if (abortCompleter.isCompleted) break;
       }
     }
+    client.close();
+    await channel.sink.close();
   }
 
   static Future<HttpClientRequest> _makePost(

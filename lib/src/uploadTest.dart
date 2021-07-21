@@ -88,10 +88,12 @@ class UploadTest {
   }
 
   double _calculateSpeed() {
+    if (_bytesUploaded == 0) {
+      return 0;
+    }
     var megabits = (_bytesUploaded / 1000000) * 8;
-    var seconds = _secondsElapsed;
 
-    return megabits / seconds;
+    return megabits / _secondsElapsed;
   }
 
   double _calculatePercentDone() {

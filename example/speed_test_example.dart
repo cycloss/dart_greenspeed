@@ -1,12 +1,14 @@
 import 'package:dart_librespeed/speed_test.dart';
 
 void main() async {
-  var dlTest =
-      DownloadTest(serverAddress: 'http://speedtest.wessexinternet.com');
-  dlTest.mbpsStream.listen((result) {
-    print(result.value);
-  });
+  var dlTest = DownloadTest(
+      serverAddress: 'http://speedtest.wessexinternet.com',
+      testDurationMs: 10000,
+      updateIntervalMs: 100);
+  dlTest.mbpsStream.listen(print);
+  dlTest.percentCompleteStream.listen(print);
   await dlTest.start();
+  return;
 
   var ulTest = UploadTest(serverAddress: 'http://speedtest.wessexinternet.com');
   ulTest.mbpsStream.listen((result) {

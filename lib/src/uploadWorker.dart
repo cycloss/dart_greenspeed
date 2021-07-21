@@ -12,7 +12,7 @@ class UploadWorker {
 
   static const _CK_SIZE = 100;
   static const _BUFFER_SIZE_BYTES = 10000;
-  static const _BUFFER_SIZE_MEGABITS = _BUFFER_SIZE_BYTES / 1000000;
+  static const _BUFFER_SIZE_MEGABITS = _BUFFER_SIZE_BYTES / 1000000 * 8;
 
   static Future<void> startUpload(SpawnBundle sb) async {
     var channel = IsolateChannel.connectSend(sb.sendPort);

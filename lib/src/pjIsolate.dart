@@ -47,6 +47,8 @@ class PJIsolate extends IsolateController implements PingJitterTest {
     });
 
     while (!abortTest) {
+      await Future.delayed(Duration(milliseconds: updateIntervalMs));
+      if (abortTest) return;
       var elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
       if (elapsedMs > testDurationMs) {
         _percentController.add(1.0);
@@ -56,7 +58,6 @@ class PJIsolate extends IsolateController implements PingJitterTest {
       _pingController.add(latestPing);
       _jitterController.add(latestJitter);
       _percentController.add(elapsedMs / testDurationMs);
-      await Future.delayed(Duration(milliseconds: updateIntervalMs));
     }
   }
 

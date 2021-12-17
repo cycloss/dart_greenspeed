@@ -42,12 +42,12 @@ abstract class UploadTest {
       {required String serverAddress,
       required int updateIntervalMs,
       required int testDurationMs}) {
-    var downloaderTask = UploadWorker.startUpload;
+    var uploaderTask = UploadWorker.startUpload;
     return DLULIsolate(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,
-        task: downloaderTask);
+        task: uploaderTask);
   }
 }
 

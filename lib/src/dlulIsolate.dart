@@ -36,9 +36,14 @@ class DLULIsolate extends IsolateController
   Future<void> calculateSpeed() async {
     var totalMegabits = 0.0;
     var startTime = DateTime.now();
+    var started = false;
     channels.forEach((channel) {
       channel.sink.add(IsolateEvent.start);
       channel.stream.listen((mbits) {
+        if (!started) {
+          started = true;
+          startTime = DateTime.now();
+        }
         totalMegabits += mbits;
       });
     });
@@ -53,8 +58,11 @@ class DLULIsolate extends IsolateController
         await abort();
         return;
       }
-      _mbpsController.add(totalMegabits / elapsedSecs);
-      _percentController.add((elapsedSecs * 1000) / testDurationMs);
+      // only add if start signal has been given
+      if (started) {
+        _mbpsController.add(totalMegabits / elapsedSecs);
+        _percentController.add((elapsedSecs * 1000) / testDurationMs);
+      }
     }
   }
 }

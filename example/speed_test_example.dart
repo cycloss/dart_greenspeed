@@ -1,6 +1,6 @@
 import 'package:dart_librespeed/speed_test.dart';
 
-void main() async {
+Future<void> main() async {
   print('Starting download test');
 
   var dlTest = DownloadTest(

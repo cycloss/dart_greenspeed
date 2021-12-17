@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:dart_librespeed/src/constants.dart';
 import 'package:stream_channel/isolate_channel.dart';
 
 import 'utilities.dart';
@@ -34,7 +35,7 @@ abstract class IsolateController {
   }
 
   Future<void> _initialiseIsolates() async {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < kIsolateCount; i++) {
       if (abortTest) return;
       var rPort = ReceivePort();
       channels.add(IsolateChannel.connectReceive(rPort));

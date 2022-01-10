@@ -4,8 +4,8 @@ Future<void> main() async {
   print('Starting download test');
 
   var dlTest = DownloadTest(
-      serverAddress: 'http://speedtest.wessexinternet.com',
-      testDurationMs: 10000,
+      serverAddress: 'ws://localhost:8080/v1/speed-test/download',
+      testDurationMs: 5000,
       updateIntervalMs: 100);
   dlTest.mbpsStream.listen(print);
   dlTest.percentCompleteStream.listen(print);

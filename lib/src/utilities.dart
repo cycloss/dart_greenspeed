@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
@@ -28,11 +27,8 @@ class SpawnBundle {
 
 enum IsolateEvent { start, abort }
 
-void listenForEvents(
-    IsolateChannel<dynamic> channel,
-    Completer<dynamic> startCompleter,
-    Completer<dynamic> abortCompleter,
-    HttpClient client) {
+void listenForEvents(IsolateChannel<dynamic> channel,
+    Completer<dynamic> startCompleter, Completer<dynamic> abortCompleter) {
   // wait for signal from main isolate to stop
   channel.stream.listen((event) {
     if (event is! IsolateEvent) return;

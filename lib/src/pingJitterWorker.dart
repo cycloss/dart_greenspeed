@@ -14,7 +14,7 @@ class PingJitterWorker {
     var abortCompleter = Completer();
     var startCompleter = Completer();
     var client = HttpClient();
-    listenForEvents(channel, startCompleter, abortCompleter, client);
+    listenForEvents(channel, startCompleter, abortCompleter);
 
     await startCompleter.future;
 

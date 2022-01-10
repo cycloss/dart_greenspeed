@@ -19,7 +19,7 @@ class UploadWorker {
     var abortCompleter = Completer();
     var startCompleter = Completer();
     var client = HttpClient();
-    listenForEvents(channel, startCompleter, abortCompleter, client);
+    listenForEvents(channel, startCompleter, abortCompleter);
     await startCompleter.future;
     while (!abortCompleter.isCompleted) {
       var postReq = await _makePost(client, sb.serverAddress);

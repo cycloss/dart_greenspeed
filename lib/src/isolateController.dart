@@ -8,6 +8,7 @@ import 'utilities.dart';
 
 abstract class IsolateController {
   final List<IsolateChannel> channels = [];
+  final List<ReceivePort> rPorts = [];
   final int updateIntervalMs;
   final int testDurationMs;
   final String serverAddress;
@@ -21,13 +22,16 @@ abstract class IsolateController {
       required this.testDurationMs,
       required this.task});
 
-  void close();
+  void close() {
+    for (var rPort in rPorts) {
+      rPort.close();
+    }
+  }
 
   Future<void> start() async {
     reset();
     // initialise isolates with small delay
     await _initialiseIsolates();
-    if (abortTest) return;
     // wait 500 ms grace time
     await Future.delayed(Duration(milliseconds: msGrace));
     if (abortTest) return;
@@ -38,6 +42,7 @@ abstract class IsolateController {
     for (var i = 0; i < kIsolateCount; i++) {
       if (abortTest) return;
       var rPort = ReceivePort();
+      rPorts.add(rPort);
       channels.add(IsolateChannel.connectReceive(rPort));
       await Isolate.spawn(task, SpawnBundle(serverAddress, rPort.sendPort));
       await Future.delayed(Duration(milliseconds: 200));
@@ -45,13 +50,14 @@ abstract class IsolateController {
     }
   }
 
-  Future<void> abort() {
+  Future<void> abort() async {
     var completer = Completer<void>();
     // signal to the isolates they should stop
     var closed = 0;
     channels.forEach((channel) async {
       channel.sink.add(IsolateEvent.abort);
       if (++closed >= channels.length) {
+        await channel.sink.close();
         completer.complete();
       }
     });

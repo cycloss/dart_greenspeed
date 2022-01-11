@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
@@ -41,4 +43,19 @@ void listenForEvents(IsolateChannel<dynamic> channel,
         return;
     }
   });
+}
+
+String generateWsKey() {
+  var r = Random();
+  return base64.encode(List<int>.generate(8, (_) => r.nextInt(255)));
+}
+
+Future<String> readResponse(HttpClientResponse response) {
+  final completer = Completer<String>();
+  final contents = StringBuffer();
+  var utf8;
+  response.transform(utf8.decoder).listen((data) {
+    contents.write(data);
+  }, onDone: () => completer.complete(contents.toString()));
+  return completer.future;
 }

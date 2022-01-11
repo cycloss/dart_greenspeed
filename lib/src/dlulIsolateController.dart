@@ -5,7 +5,7 @@ import 'package:dart_librespeed/src/isolateController.dart';
 import '../speed_test.dart';
 import 'utilities.dart';
 
-class DLULIsolate extends IsolateController
+class DLULIsolateController extends IsolateController
     implements DownloadTest, UploadTest {
   final StreamController<double> _mbpsController = StreamController();
   final StreamController<double> _percentController = StreamController();
@@ -15,7 +15,7 @@ class DLULIsolate extends IsolateController
   @override
   Stream<double> get percentCompleteStream => _percentController.stream;
 
-  DLULIsolate(
+  DLULIsolateController(
       {required String serverAddress,
       required int updateIntervalMs,
       required int testDurationMs,
@@ -27,9 +27,10 @@ class DLULIsolate extends IsolateController
             task: task);
 
   @override
-  void close() {
-    _mbpsController.close();
-    _percentController.close();
+  Future<void> close() async {
+    await _mbpsController.close();
+    await _percentController.close();
+    super.close();
   }
 
   @override
@@ -50,13 +51,13 @@ class DLULIsolate extends IsolateController
 
     while (!abortTest) {
       await Future.delayed(Duration(milliseconds: updateIntervalMs));
-      if (abortTest) return;
+      if (abortTest) break;
       var elapsedSecs =
           DateTime.now().difference(startTime).inMilliseconds / 1000;
       if ((elapsedSecs * 1000) > testDurationMs) {
         _percentController.add(1.0);
         await abort();
-        return;
+        break;
       }
       // only add if start signal has been given
       if (started) {
@@ -64,5 +65,12 @@ class DLULIsolate extends IsolateController
         _percentController.add((elapsedSecs * 1000) / testDurationMs);
       }
     }
+    await close();
+  }
+
+  @override
+  Future<void> abort() async {
+    await super.abort();
+    await close();
   }
 }

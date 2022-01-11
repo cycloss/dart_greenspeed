@@ -3,7 +3,7 @@
 /// More dartdocs go here.
 library dart_librespeed;
 
-import 'src/dlulIsolate.dart';
+import 'src/dlulIsolateController.dart';
 import 'src/downloadWorker.dart';
 import 'src/pingJitterWorker.dart';
 import 'src/pjIsolate.dart';
@@ -15,14 +15,13 @@ abstract class DownloadTest {
 
   Future<void> start();
   Future<void> abort();
-  void close();
 
   factory DownloadTest(
       {required String serverAddress,
       required int updateIntervalMs,
       required int testDurationMs}) {
     var downloaderTask = DownloadWorker.startDownload;
-    return DLULIsolate(
+    return DLULIsolateController(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,
@@ -43,7 +42,7 @@ abstract class UploadTest {
       required int updateIntervalMs,
       required int testDurationMs}) {
     var uploaderTask = UploadWorker.startUpload;
-    return DLULIsolate(
+    return DLULIsolateController(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,

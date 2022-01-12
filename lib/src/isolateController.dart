@@ -25,6 +25,7 @@ abstract class IsolateController {
       required this.isolateCount,
       required this.task});
 
+  // must close ports on abort and end test
   void close() {
     for (var rPort in rPorts) {
       rPort.close();
@@ -39,6 +40,8 @@ abstract class IsolateController {
     await Future.delayed(Duration(milliseconds: msGrace));
     if (abortTest) return;
     await calculateSpeed();
+    if (abortTest) return;
+    close();
   }
 
   Future<void> _initialiseIsolates() async {
@@ -66,6 +69,7 @@ abstract class IsolateController {
       }
     });
     abortTest = true;
+    close();
     return completer.future;
   }
 

@@ -38,10 +38,5 @@ class UploadWorker {
     });
 
     return finishedCompleter.future;
-    // while (!abortCompleter.isCompleted) {
-    //   var megabits = (bytes.length * 8) / 1000000;
-    //   channel.sink.add(megabits);
-    // }
-    // await ws.close();
   }
 }

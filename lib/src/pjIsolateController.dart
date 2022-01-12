@@ -74,9 +74,9 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   @override
   Future<void> close() async {
+    print('closing pj controllers');
     await _pingController.close();
     await _jitterController.close();
     await _percentController.close();
-    super.close();
   }
 }

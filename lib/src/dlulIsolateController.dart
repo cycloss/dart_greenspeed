@@ -66,8 +66,8 @@ class DLULIsolateController extends IsolateController
 
   @override
   Future<void> close() async {
+    print('closing dlul controller');
     await _mbpsController.close();
     await _percentController.close();
-    super.close();
   }
 }

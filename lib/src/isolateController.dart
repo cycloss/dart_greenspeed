@@ -26,7 +26,8 @@ abstract class IsolateController {
       required this.task});
 
   // must close ports on abort and end test
-  void close() {
+  void closeReceivePorts() {
+    print('closing ports');
     for (var rPort in rPorts) {
       rPort.close();
     }
@@ -41,7 +42,7 @@ abstract class IsolateController {
     if (abortTest) return;
     await calculateSpeed();
     if (abortTest) return;
-    close();
+    closeReceivePorts();
   }
 
   Future<void> _initialiseIsolates() async {
@@ -64,12 +65,11 @@ abstract class IsolateController {
     channels.forEach((channel) async {
       channel.sink.add(IsolateEvent.abort);
       if (++closed >= channels.length) {
-        await channel.sink.close();
         completer.complete();
       }
     });
     abortTest = true;
-    close();
+    closeReceivePorts();
     return completer.future;
   }
 

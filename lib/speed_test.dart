@@ -12,6 +12,7 @@ abstract class DownloadTest {
   Stream<double> get percentCompleteStream;
 
   Future<void> start();
+  Future<void> close();
   Future<void> abort();
 
   /// `authToken` is optional and only required if the testing server uses the `Authorize` header to secure the test to customers only.
@@ -38,8 +39,8 @@ abstract class UploadTest {
   Stream<double> get percentCompleteStream;
 
   Future<void> start();
+  Future<void> close();
   Future<void> abort();
-  void close();
 
   factory UploadTest({
     required String serverAddress,
@@ -63,8 +64,8 @@ abstract class PingJitterTest {
   Stream<double> get percentStream;
 
   Future<void> start();
+  Future<void> close();
   Future<void> abort();
-  void close();
 
   factory PingJitterTest(
       {required String serverAddress,

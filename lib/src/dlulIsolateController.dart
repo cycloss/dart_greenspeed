@@ -31,13 +31,6 @@ class DLULIsolateController extends IsolateController
             task: task);
 
   @override
-  Future<void> close() async {
-    await _mbpsController.close();
-    await _percentController.close();
-    super.close();
-  }
-
-  @override
   Future<void> calculateSpeed() async {
     var totalMegabits = 0.0;
     var startTime = DateTime.now();
@@ -69,12 +62,12 @@ class DLULIsolateController extends IsolateController
         _percentController.add((elapsedSecs * 1000) / testDurationMs);
       }
     }
-    await close();
   }
 
   @override
-  Future<void> abort() async {
-    await super.abort();
-    await close();
+  Future<void> close() async {
+    await _mbpsController.close();
+    await _percentController.close();
+    super.close();
   }
 }

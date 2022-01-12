@@ -1,7 +1,8 @@
 import 'package:dart_librespeed/speed_test.dart';
 
 Future<void> main() async {
-  var baseAddress = 'http://localhost:5001/v1/speed-test';
+  // var baseAddress = 'http://localhost:5001/v1/speed-test';
+  var baseAddress = 'https://mobile-proxy.wessexinternet.net/v1/speed-test';
 
   print('Starting download test');
 

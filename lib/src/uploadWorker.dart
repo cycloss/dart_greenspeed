@@ -7,8 +7,8 @@ import 'utilities.dart';
 class UploadWorker {
   UploadWorker._();
 
-  // 10mb chunk size
-  static const _CHUNK_SIZE_BYTES = 10485760;
+  // 0.5mb chunk size
+  static const _CHUNK_SIZE_BYTES = 524288;
 
   static Future<void> startUpload(SpawnBundle sb) async {
     var channel = IsolateChannel.connectSend(sb.sendPort);

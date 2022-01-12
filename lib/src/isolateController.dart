@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:dart_librespeed/src/constants.dart';
 import 'package:stream_channel/isolate_channel.dart';
 
 import 'utilities.dart';
@@ -11,15 +10,19 @@ abstract class IsolateController {
   final List<ReceivePort> rPorts = [];
   final int updateIntervalMs;
   final int testDurationMs;
+  final int isolateCount;
   final String serverAddress;
+  final String? authToken;
   final int msGrace = 1000;
   bool abortTest = false;
   final Future<void> Function(SpawnBundle) task;
 
   IsolateController(
       {required this.serverAddress,
+      this.authToken,
       required this.updateIntervalMs,
       required this.testDurationMs,
+      required this.isolateCount,
       required this.task});
 
   void close() {
@@ -39,12 +42,13 @@ abstract class IsolateController {
   }
 
   Future<void> _initialiseIsolates() async {
-    for (var i = 0; i < kIsolateCount; i++) {
+    for (var i = 0; i < isolateCount; i++) {
       if (abortTest) return;
       var rPort = ReceivePort();
       rPorts.add(rPort);
       channels.add(IsolateChannel.connectReceive(rPort));
-      await Isolate.spawn(task, SpawnBundle(serverAddress, rPort.sendPort));
+      await Isolate.spawn(
+          task, SpawnBundle(serverAddress, authToken, rPort.sendPort));
       await Future.delayed(Duration(milliseconds: 200));
       if (abortTest) return;
     }

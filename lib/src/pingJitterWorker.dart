@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:stream_channel/isolate_channel.dart';
 
@@ -23,11 +22,9 @@ class PingJitterWorker {
     var totalPing = 0.0;
     var totalJitter = 0.0;
     while (!abortCompleter.isCompleted) {
-      var pingStart = DateTime.now();
       var req = await _makeRequest(client, sb.serverAddress);
-      if (abortCompleter.isCompleted) break;
+      var pingStart = DateTime.now();
       var resp = await req.close();
-      if (abortCompleter.isCompleted) break;
       if (resp.statusCode != 200) {
         throw Exception(
             'Server not operational, status code: ${resp.statusCode}');
@@ -50,7 +47,6 @@ class PingJitterWorker {
 
   static Future<HttpClientRequest> _makeRequest(
       HttpClient client, String serverAddress) async {
-    var r = Random().nextDouble();
-    return client.getUrl(Uri.parse('$serverAddress/empty.php?r=$r'));
+    return client.getUrl(Uri.parse(serverAddress));
   }
 }

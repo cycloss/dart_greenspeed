@@ -1,13 +1,11 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
 library dart_librespeed;
+
+import 'package:dart_librespeed/src/uploadWorker.dart';
 
 import 'src/dlulIsolateController.dart';
 import 'src/downloadWorker.dart';
 import 'src/pingJitterWorker.dart';
-import 'src/pjIsolate.dart';
-import 'src/uploadWorker.dart';
+import 'src/pjIsolateController.dart';
 
 abstract class DownloadTest {
   Stream<double> get mbpsStream;
@@ -16,15 +14,21 @@ abstract class DownloadTest {
   Future<void> start();
   Future<void> abort();
 
-  factory DownloadTest(
-      {required String serverAddress,
-      required int updateIntervalMs,
-      required int testDurationMs}) {
+  /// `authToken` is optional and only required if the testing server uses the `Authorize` header to secure the test to customers only.
+  factory DownloadTest({
+    required String serverAddress,
+    String? authToken,
+    required int updateIntervalMs,
+    required int testDurationMs,
+    int isolateCount = 2,
+  }) {
     var downloaderTask = DownloadWorker.startDownload;
     return DLULIsolateController(
         serverAddress: serverAddress,
+        authToken: authToken,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,
+        isolateCount: isolateCount,
         task: downloaderTask);
   }
 }
@@ -37,15 +41,18 @@ abstract class UploadTest {
   Future<void> abort();
   void close();
 
-  factory UploadTest(
-      {required String serverAddress,
-      required int updateIntervalMs,
-      required int testDurationMs}) {
+  factory UploadTest({
+    required String serverAddress,
+    required int updateIntervalMs,
+    required int testDurationMs,
+    int isolateCount = 2,
+  }) {
     var uploaderTask = UploadWorker.startUpload;
     return DLULIsolateController(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,
+        isolateCount: isolateCount,
         task: uploaderTask);
   }
 }
@@ -62,12 +69,14 @@ abstract class PingJitterTest {
   factory PingJitterTest(
       {required String serverAddress,
       required int updateIntervalMs,
+      int isolateCount = 2,
       required int testDurationMs}) {
     var pjTask = PingJitterWorker.startPJTest;
-    return PJIsolate(
+    return PJIsolateController(
         serverAddress: serverAddress,
         updateIntervalMs: updateIntervalMs,
         testDurationMs: testDurationMs,
+        isolateCount: isolateCount,
         task: pjTask);
   }
 }

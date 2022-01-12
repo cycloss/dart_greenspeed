@@ -17,13 +17,17 @@ class DLULIsolateController extends IsolateController
 
   DLULIsolateController(
       {required String serverAddress,
+      String? authToken,
       required int updateIntervalMs,
       required int testDurationMs,
+      required int isolateCount,
       required Future<void> Function(SpawnBundle) task})
       : super(
             serverAddress: serverAddress,
+            authToken: authToken,
             updateIntervalMs: updateIntervalMs,
             testDurationMs: testDurationMs,
+            isolateCount: isolateCount,
             task: task);
 
   @override

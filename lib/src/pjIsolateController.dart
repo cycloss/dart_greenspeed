@@ -5,7 +5,7 @@ import 'package:dart_librespeed/src/isolateController.dart';
 
 import 'utilities.dart';
 
-class PJIsolate extends IsolateController implements PingJitterTest {
+class PJIsolateController extends IsolateController implements PingJitterTest {
   final StreamController<double> _pingController = StreamController();
   final StreamController<double> _jitterController = StreamController();
   final StreamController<double> _percentController = StreamController();
@@ -20,15 +20,17 @@ class PJIsolate extends IsolateController implements PingJitterTest {
   @override
   Stream<double> get percentStream => _percentController.stream;
 
-  PJIsolate(
+  PJIsolateController(
       {required String serverAddress,
       required int updateIntervalMs,
       required int testDurationMs,
+      required int isolateCount,
       required Future<void> Function(SpawnBundle) task})
       : super(
             serverAddress: serverAddress,
             updateIntervalMs: updateIntervalMs,
             testDurationMs: testDurationMs,
+            isolateCount: isolateCount,
             task: task);
 
   @override
@@ -71,9 +73,10 @@ class PJIsolate extends IsolateController implements PingJitterTest {
   }
 
   @override
-  void close() {
-    _pingController.close();
-    _jitterController.close();
-    _percentController.close();
+  Future<void> close() async {
+    await _pingController.close();
+    await _jitterController.close();
+    await _percentController.close();
+    super.close();
   }
 }

@@ -1,7 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:stream_channel/isolate_channel.dart';
 
@@ -10,43 +7,41 @@ import 'utilities.dart';
 class UploadWorker {
   UploadWorker._();
 
-  static const _CK_SIZE = 100;
-  static const _BUFFER_SIZE_BYTES = 10000;
-  static const _BUFFER_SIZE_MEGABITS = _BUFFER_SIZE_BYTES / 1000000 * 8;
+  // 10mb chunk size
+  static const _CHUNK_SIZE_BYTES = 10485760;
 
   static Future<void> startUpload(SpawnBundle sb) async {
     var channel = IsolateChannel.connectSend(sb.sendPort);
     var abortCompleter = Completer();
     var startCompleter = Completer();
-    var client = HttpClient();
     listenForEvents(channel, startCompleter, abortCompleter);
-    await startCompleter.future;
-    while (!abortCompleter.isCompleted) {
-      var postReq = await _makePost(client, sb.serverAddress);
-      if (abortCompleter.isCompleted) break;
-      var bytes = generateRandomBytes(_CK_SIZE * 1000000);
-      for (var offset = 0;
-          offset + _BUFFER_SIZE_BYTES < bytes.buffer.lengthInBytes;
-          offset += _BUFFER_SIZE_BYTES) {
-        var byteView = Uint8List.view(bytes.buffer, offset, _BUFFER_SIZE_BYTES);
-        postReq.add(byteView);
-        await postReq.flush();
-        if (abortCompleter.isCompleted) break;
-        channel.sink.add(_BUFFER_SIZE_MEGABITS);
-        if (abortCompleter.isCompleted) break;
-      }
-    }
-    client.close();
-    await channel.sink.close();
-  }
 
-  static Future<HttpClientRequest> _makePost(
-      HttpClient client, String serverAddress) async {
-    var r = Random().nextDouble();
-    var post = await client.postUrl(Uri.parse('$serverAddress/empty.php?r=$r'));
-    post.headers.contentType = ContentType.binary;
-    // flush the headers to the stream
-    await post.flush();
-    return post;
+    // wait for signal to start given by performTest()
+    await startCompleter.future;
+    var ws = await createWebSocket(sb.serverAddress, sb.authToken);
+
+    var finishedCompleter = Completer();
+
+    var bytes = generateRandomBytes(_CHUNK_SIZE_BYTES);
+
+    ws.listen((data) async {
+      if (abortCompleter.isCompleted) {
+        await ws.close();
+        finishedCompleter.complete();
+      } else {
+        ws.add(bytes);
+        // print('added');
+        var megabits = (bytes.length * 8) / 1000000;
+        // keep feeding results to the main isolate
+        channel.sink.add(megabits);
+      }
+    });
+
+    return finishedCompleter.future;
+    // while (!abortCompleter.isCompleted) {
+    //   var megabits = (bytes.length * 8) / 1000000;
+    //   channel.sink.add(megabits);
+    // }
+    // await ws.close();
   }
 }

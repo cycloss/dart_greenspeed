@@ -22,9 +22,10 @@ Uint8List generateRandomBytes(int length) {
 
 class SpawnBundle {
   final String serverAddress;
+  final String? authToken;
   final SendPort sendPort;
 
-  SpawnBundle(this.serverAddress, this.sendPort);
+  SpawnBundle(this.serverAddress, this.authToken, this.sendPort);
 }
 
 enum IsolateEvent { start, abort }
@@ -43,6 +44,33 @@ void listenForEvents(IsolateChannel<dynamic> channel,
         return;
     }
   });
+}
+
+Future<WebSocket> createWebSocket(String url, String? authToken) async {
+  var client = HttpClient();
+  var request = await client.getUrl(Uri.parse(url));
+  request.headers.add('Connection', 'upgrade', preserveHeaderCase: true);
+  request.headers.add('Upgrade', 'websocket', preserveHeaderCase: true);
+  if (authToken != null) {
+    request.headers.add('Authorize', authToken);
+  }
+  request.headers
+      .add('sec-websocket-version', '13'); // insert the correct version here
+  request.headers.add('sec-websocket-key', generateWsKey());
+
+  var response = await request.close();
+
+  if (response.statusCode != 101) {
+    var resp = await readResponse(response);
+    throw Exception('Failed to upgrade to web socket: $resp');
+  }
+
+  var socket = await response.detachSocket();
+
+  return WebSocket.fromUpgradedSocket(
+    socket,
+    serverSide: false,
+  );
 }
 
 String generateWsKey() {

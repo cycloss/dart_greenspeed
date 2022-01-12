@@ -29,6 +29,7 @@ class PingJitterWorker {
         throw Exception(
             'Server not operational, status code: ${resp.statusCode}');
       }
+      await resp.listen(null).cancel();
       var pingEnd = DateTime.now();
       var currentPing = pingEnd.difference(pingStart).inMicroseconds / 1000;
       totalPing += currentPing;

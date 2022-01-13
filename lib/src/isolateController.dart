@@ -27,7 +27,6 @@ abstract class IsolateController {
 
   // must close ports on abort and end test
   void closeReceivePorts() {
-    print('closing ports');
     for (var rPort in rPorts) {
       rPort.close();
     }
@@ -58,22 +57,17 @@ abstract class IsolateController {
     }
   }
 
-  Future<void> abort() async {
-    var completer = Completer<void>();
+  void abort() async {
     // signal to the isolates they should stop
-    var closed = 0;
-    channels.forEach((channel) async {
+    channels.forEach((channel) {
       channel.sink.add(IsolateEvent.abort);
-      if (++closed >= channels.length) {
-        completer.complete();
-      }
     });
     abortTest = true;
     closeReceivePorts();
-    return completer.future;
   }
 
   void reset() {
+    closeReceivePorts();
     channels.clear();
     abortTest = false;
   }

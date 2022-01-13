@@ -20,23 +20,20 @@ class UploadWorker {
     await startCompleter.future;
     var ws = await createWebSocket(sb.serverAddress, sb.authToken);
 
-    var finishedCompleter = Completer();
-
     var bytes = generateRandomBytes(_CHUNK_SIZE_BYTES);
 
-    ws.listen((data) async {
-      if (abortCompleter.isCompleted) {
-        await ws.close();
-        finishedCompleter.complete();
-      } else {
-        ws.add(bytes);
-        // print('added');
-        var megabits = (bytes.length * 8) / 1000000;
-        // keep feeding results to the main isolate
-        channel.sink.add(megabits);
-      }
-    });
-
-    return finishedCompleter.future;
+    // websocket broadcast stream, can be listened to more than once
+    // also only gives data from the time when it is listened to
+    var wsBs = ws.asBroadcastStream();
+    while (!abortCompleter.isCompleted) {
+      ws.add(bytes);
+      var megabits = (bytes.length * 8) / 1000000;
+      // keep feeding results to the main isolate
+      channel.sink.add(megabits);
+      // await acknowledgement of acceptance
+      // first automatically closes
+      await wsBs.first;
+    }
+    await ws.close();
   }
 }

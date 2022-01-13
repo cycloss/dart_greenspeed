@@ -60,7 +60,7 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
       var elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
       if (elapsedMs > testDurationMs) {
         _percentController.add(1.0);
-        await abort();
+        abort();
         return;
       }
       // only add if start signal has been given
@@ -74,7 +74,6 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   @override
   Future<void> close() async {
-    print('closing pj controllers');
     await _pingController.close();
     await _jitterController.close();
     await _percentController.close();

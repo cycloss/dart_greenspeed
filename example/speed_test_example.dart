@@ -1,8 +1,7 @@
 import 'package:dart_librespeed/speed_test.dart';
 
 Future<void> main() async {
-  // var baseAddress = 'http://localhost:5001/v1/speed-test';
-  var baseAddress = 'https://mobile-proxy.wessexinternet.net/v1/speed-test';
+  var baseAddress = 'http://localhost:5001/v1/speed-test';
 
   print('Starting download test');
 
@@ -15,6 +14,7 @@ Future<void> main() async {
   dlTest.percentCompleteStream.listen(print);
 
   await dlTest.start();
+  await dlTest.close();
 
   print('Starting upload test');
 
@@ -27,17 +27,21 @@ Future<void> main() async {
   ulTest.percentCompleteStream.listen(print);
 
   await ulTest.start();
+  await ulTest.close();
 
   print('Starting ping jitter test');
 
-  var pingTest = PingJitterTest(
+  var pingJitterTest = PingJitterTest(
       serverAddress: '$baseAddress/ping',
       testDurationMs: 10000,
       updateIntervalMs: 100,
       isolateCount: 1);
-  pingTest.pingStream
+  pingJitterTest.pingStream
       .listen((pingMs) => print('${pingMs.toStringAsFixed(2)} ms ping'));
-  pingTest.jitterStream.listen((jitterMs) => print('$jitterMs ms jitter'));
-  pingTest.percentStream.listen(print);
-  await pingTest.start();
+  pingJitterTest.jitterStream
+      .listen((jitterMs) => print('$jitterMs ms jitter'));
+  pingJitterTest.percentStream.listen(print);
+
+  await pingJitterTest.start();
+  await pingJitterTest.close();
 }

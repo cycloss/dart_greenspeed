@@ -7,13 +7,22 @@ import 'src/downloadWorker.dart';
 import 'src/pingJitterWorker.dart';
 import 'src/pjIsolateController.dart';
 
-abstract class DownloadTest {
+abstract class SpeedTest {
+  /// Starts a test, causing that test's `Stream`s to begin emitting events.
+  /// May be called multiple times, but not before each call's future has returned.
+  /// Returns a future that completes when a test has finished.
+  Future<void> start();
+
+  /// Aborts a running test, closing its worker isolates.
+  void abort();
+
+  /// Releases a test object's stream resources. Once called, `start` may not be called on that object again.
+  Future<void> close();
+}
+
+abstract class DownloadTest implements SpeedTest {
   Stream<double> get mbpsStream;
   Stream<double> get percentCompleteStream;
-
-  Future<void> start();
-  Future<void> close();
-  Future<void> abort();
 
   /// `authToken` is optional and only required if the testing server uses the `Authorize` header to secure the test to customers only.
   factory DownloadTest({
@@ -34,13 +43,9 @@ abstract class DownloadTest {
   }
 }
 
-abstract class UploadTest {
+abstract class UploadTest implements SpeedTest {
   Stream<double> get mbpsStream;
   Stream<double> get percentCompleteStream;
-
-  Future<void> start();
-  Future<void> close();
-  Future<void> abort();
 
   factory UploadTest({
     required String serverAddress,
@@ -58,14 +63,10 @@ abstract class UploadTest {
   }
 }
 
-abstract class PingJitterTest {
+abstract class PingJitterTest implements SpeedTest {
   Stream<double> get pingStream;
   Stream<double> get jitterStream;
   Stream<double> get percentStream;
-
-  Future<void> start();
-  Future<void> close();
-  Future<void> abort();
 
   factory PingJitterTest(
       {required String serverAddress,

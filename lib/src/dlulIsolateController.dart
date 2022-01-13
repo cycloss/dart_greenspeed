@@ -53,7 +53,7 @@ class DLULIsolateController extends IsolateController
           DateTime.now().difference(startTime).inMilliseconds / 1000;
       if ((elapsedSecs * 1000) > testDurationMs) {
         _percentController.add(1.0);
-        await abort();
+        abort();
         break;
       }
       // only add if start signal has been given
@@ -66,7 +66,6 @@ class DLULIsolateController extends IsolateController
 
   @override
   Future<void> close() async {
-    print('closing dlul controller');
     await _mbpsController.close();
     await _percentController.close();
   }

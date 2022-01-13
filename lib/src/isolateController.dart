@@ -13,7 +13,7 @@ abstract class IsolateController {
   final int isolateCount;
   final String serverAddress;
   final String? authToken;
-  final int msGrace = 1000;
+  final int msGrace = 500;
   bool abortTest = false;
   final Future<void> Function(SpawnBundle) task;
 
@@ -52,7 +52,7 @@ abstract class IsolateController {
       channels.add(IsolateChannel.connectReceive(rPort));
       await Isolate.spawn(
           task, SpawnBundle(serverAddress, authToken, rPort.sendPort));
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(Duration(milliseconds: 100));
       if (abortTest) return;
     }
   }

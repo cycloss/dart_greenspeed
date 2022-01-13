@@ -40,12 +40,10 @@ class DLULIsolateController extends IsolateController
       channel.stream.listen((mbits) {
         if (!started) {
           started = true;
-          startTime = DateTime.now();
         }
         totalMegabits += mbits;
       });
     });
-
     while (!abortTest) {
       await Future.delayed(Duration(milliseconds: updateIntervalMs));
       if (abortTest) break;
@@ -60,6 +58,9 @@ class DLULIsolateController extends IsolateController
       if (started) {
         _mbpsController.add(totalMegabits / elapsedSecs);
         _percentController.add((elapsedSecs * 1000) / testDurationMs);
+      } else {
+        startTime = DateTime.now();
+        totalMegabits = 0;
       }
     }
   }

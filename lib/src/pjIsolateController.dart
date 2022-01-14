@@ -22,7 +22,6 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   var latestPing = 0.0;
   var latestJitter = 0.0;
-  var startTime = DateTime.now();
   var started = false;
 
   PJIsolateController(
@@ -45,13 +44,14 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
     attachErrorHandlers();
     attachIsolateListeners();
 
+    var startTime = DateTime.now();
     while (!abortTest) {
       await Future.delayed(Duration(milliseconds: updateIntervalMs));
       if (abortTest) return;
       var elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
       if (elapsedMs > testDurationMs) {
         _percentController.add(1.0);
-        abort();
+        await abort();
         return;
       }
       // only add if start signal has been given
@@ -69,16 +69,15 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   void attachIsolateListeners() {
     channels.forEach((channel) {
-      channel.sink.add(IsolateEvent.start);
       channel.stream.listen((message) {
         if (!started) {
           started = true;
-          startTime = DateTime.now();
         }
         var vals = (message as String).split('-');
         latestPing = double.parse(vals[0]);
         latestJitter = double.parse(vals[1]);
       });
+      channel.sink.add(IsolateEvent.start);
     });
   }
 

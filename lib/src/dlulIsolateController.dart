@@ -45,7 +45,7 @@ class DLULIsolateController extends IsolateController
           DateTime.now().difference(startTime).inMilliseconds / 1000;
       if ((elapsedSecs * 1000) > testDurationMs) {
         _percentController.add(1.0);
-        abort();
+        await abort();
         break;
       }
       // only add if start signal has been given

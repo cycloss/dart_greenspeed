@@ -27,7 +27,6 @@ abstract class IsolateController {
       required this.task});
 
   Future<void> start() async {
-    reset();
     // initialise isolates with small delay
     await _initialiseIsolates();
     // wait 500 ms grace time
@@ -62,12 +61,6 @@ abstract class IsolateController {
     });
     abortTest = true;
     closeReceivePorts();
-  }
-
-  void reset() {
-    closeReceivePorts();
-    channels.clear();
-    abortTest = false;
   }
 
   // must close ports on abort and end test

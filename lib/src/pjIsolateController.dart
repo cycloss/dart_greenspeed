@@ -42,7 +42,6 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   @override
   Future<void> calculateSpeed() async {
-    reset();
     attachErrorHandlers();
     attachIsolateListeners();
 
@@ -97,11 +96,9 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
   }
 
   @override
-  void reset() {
-    latestPing = 0.0;
-    latestJitter = 0.0;
-    startTime = DateTime.now();
-    started = false;
+  Future<void> abort() async {
+    await close();
+    super.abort();
   }
 
   @override

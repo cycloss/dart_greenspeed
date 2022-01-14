@@ -34,7 +34,6 @@ class DLULIsolateController extends IsolateController
 
   @override
   Future<void> calculateSpeed() async {
-    reset();
     attachErrorHandlers();
     attachIsolateListeners();
 
@@ -86,9 +85,9 @@ class DLULIsolateController extends IsolateController
   }
 
   @override
-  void reset() {
-    totalMegabits = 0.0;
-    started = false;
+  Future<void> abort() async {
+    await close();
+    super.abort();
   }
 
   @override

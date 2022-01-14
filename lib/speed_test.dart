@@ -9,14 +9,14 @@ import 'src/pjIsolateController.dart';
 
 abstract class SpeedTest {
   /// Starts a test, causing that test's `Stream`s to begin emitting events.
-  /// May be called multiple times, but not before each call's future has returned.
+  /// Must **not** be called multiple times. Instantiate a new test object if you want to restart a test.
   /// Returns a future that completes when a test has finished.
   Future<void> start();
 
-  /// Aborts a running test, closing its worker isolates.
-  void abort();
+  /// Aborts a running test, closing its worker isolates and stream resources. (Implicitly calls `close`).
+  Future<void> abort();
 
-  /// Releases a test object's stream resources. Once called, `start` may not be called on that object again.
+  /// Releases a test object's stream resources. Must not be called before `start`'s future has returned.
   Future<void> close();
 }
 

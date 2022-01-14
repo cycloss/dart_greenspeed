@@ -19,6 +19,10 @@ class UploadWorker {
     // wait for signal to start given by performTest()
     await startCompleter.future;
     var ws = await createWebSocket(sb.serverAddress, sb.authToken);
+    if (abortCompleter.isCompleted) {
+      await ws.close();
+      return;
+    }
 
     var bytes = generateRandomBytes(_CHUNK_SIZE_BYTES);
 

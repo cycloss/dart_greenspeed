@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dart_librespeed/src/isolateController.dart';
+import 'package:dart_greenspeed/src/isolateController.dart';
 
 import '../speed_test.dart';
 import 'utilities.dart';
@@ -14,6 +14,8 @@ class DLULIsolateController extends IsolateController
   Stream<double> get mbpsStream => _mbpsController.stream;
   @override
   Stream<double> get percentCompleteStream => _percentController.stream;
+  var totalMegabits = 0.0;
+  var started = false;
 
   DLULIsolateController(
       {required String serverAddress,
@@ -32,18 +34,11 @@ class DLULIsolateController extends IsolateController
 
   @override
   Future<void> calculateSpeed() async {
-    var totalMegabits = 0.0;
+    reset();
+    attachErrorHandlers();
+    attachIsolateListeners();
+
     var startTime = DateTime.now();
-    var started = false;
-    channels.forEach((channel) {
-      channel.sink.add(IsolateEvent.start);
-      channel.stream.listen((mbits) {
-        if (!started) {
-          started = true;
-        }
-        totalMegabits += mbits;
-      });
-    });
     while (!abortTest) {
       await Future.delayed(Duration(milliseconds: updateIntervalMs));
       if (abortTest) break;
@@ -63,6 +58,37 @@ class DLULIsolateController extends IsolateController
         totalMegabits = 0;
       }
     }
+  }
+
+  void attachIsolateListeners() {
+    channels.forEach((channel) {
+      channel.stream.listen((mbits) {
+        if (!started) {
+          started = true;
+        }
+        totalMegabits += mbits;
+      });
+      channel.sink.add(IsolateEvent.start);
+    });
+  }
+
+  void attachErrorHandlers() {
+    errorRPorts.forEach((rPort) {
+      // errors come through as a two item array and as a standard object
+      rPort.listen((message) {
+        var exceptionStr = message[0] as String;
+        var e = parseExecption(exceptionStr);
+
+        _mbpsController.addError(e);
+        abort();
+      });
+    });
+  }
+
+  @override
+  void reset() {
+    totalMegabits = 0.0;
+    started = false;
   }
 
   @override

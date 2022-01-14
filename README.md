@@ -9,9 +9,9 @@ Supports testing ping (ms), jitter (ms), download speed (megabits/sec) and uploa
 This library is not available on pub.dev, so add the following to your `pubspec.yaml` dependencies:
 
 ```yaml
-dart_librespeed:
+dart_greenspeed:
     git:
-      url: https://github.com/cycloss/dart_librespeed
+      url: https://github.com/cycloss/dart_greenspeed
       ref: main
 ```
 
@@ -26,7 +26,7 @@ A server side installation will also be required to accept and handle incoming w
 - `isolateCount` specifies how many isolates a test should run with. Defaults to `2`.
 
 ```dart
-import 'package:dart_librespeed/speed_test.dart';
+import 'package:dart_greenspeed/speed_test.dart';
 
 Future<void> main() async {
   var baseAddress = 'http://mydomain.com';

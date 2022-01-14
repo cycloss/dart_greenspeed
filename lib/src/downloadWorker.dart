@@ -17,6 +17,10 @@ class DownloadWorker {
     /// wait for signal to start given by performTest()
     await startCompleter.future;
     var ws = await createWebSocket(sb.serverAddress, sb.authToken);
+    if (abortCompleter.isCompleted) {
+      await ws.close();
+      return;
+    }
 
     await for (var data in ws) {
       var bytes = Uint8List.fromList(data);

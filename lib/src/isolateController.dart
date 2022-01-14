@@ -8,6 +8,7 @@ import 'utilities.dart';
 abstract class IsolateController {
   final List<IsolateChannel> channels = [];
   final List<ReceivePort> rPorts = [];
+  final List<ReceivePort> errorRPorts = [];
   final int updateIntervalMs;
   final int testDurationMs;
   final int isolateCount;
@@ -25,13 +26,6 @@ abstract class IsolateController {
       required this.isolateCount,
       required this.task});
 
-  // must close ports on abort and end test
-  void closeReceivePorts() {
-    for (var rPort in rPorts) {
-      rPort.close();
-    }
-  }
-
   Future<void> start() async {
     reset();
     // initialise isolates with small delay
@@ -48,11 +42,15 @@ abstract class IsolateController {
     for (var i = 0; i < isolateCount; i++) {
       if (abortTest) return;
       var rPort = ReceivePort();
+      var errorRPort = ReceivePort();
       rPorts.add(rPort);
+      errorRPorts.add(errorRPort);
       channels.add(IsolateChannel.connectReceive(rPort));
       await Isolate.spawn(
-          task, SpawnBundle(serverAddress, authToken, rPort.sendPort));
-      await Future.delayed(Duration(milliseconds: 100));
+          task, SpawnBundle(serverAddress, authToken, rPort.sendPort),
+          onError: errorRPort.sendPort);
+      // await Future.delayed(Duration(milliseconds: 100));
+
       if (abortTest) return;
     }
   }
@@ -70,6 +68,16 @@ abstract class IsolateController {
     closeReceivePorts();
     channels.clear();
     abortTest = false;
+  }
+
+  // must close ports on abort and end test
+  void closeReceivePorts() {
+    for (var rPort in rPorts) {
+      rPort.close();
+    }
+    for (var rPort in errorRPorts) {
+      rPort.close();
+    }
   }
 
   Future<void> calculateSpeed();

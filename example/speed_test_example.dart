@@ -1,4 +1,4 @@
-import 'package:dart_librespeed/speed_test.dart';
+import 'package:dart_greenspeed/speed_test.dart';
 
 Future<void> main() async {
   var baseAddress = 'http://localhost:5001/v1/speed-test';

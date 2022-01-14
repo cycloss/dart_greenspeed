@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:dart_librespeed/speed_test.dart';
-import 'package:dart_librespeed/src/isolateController.dart';
+import 'package:dart_greenspeed/speed_test.dart';
+import 'package:dart_greenspeed/src/isolateController.dart';
 
 import 'utilities.dart';
 
@@ -20,14 +20,21 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
   @override
   Stream<double> get percentStream => _percentController.stream;
 
+  var latestPing = 0.0;
+  var latestJitter = 0.0;
+  var startTime = DateTime.now();
+  var started = false;
+
   PJIsolateController(
       {required String serverAddress,
+      String? authToken,
       required int updateIntervalMs,
       required int testDurationMs,
       required int isolateCount,
       required Future<void> Function(SpawnBundle) task})
       : super(
             serverAddress: serverAddress,
+            authToken: authToken,
             updateIntervalMs: updateIntervalMs,
             testDurationMs: testDurationMs,
             isolateCount: isolateCount,
@@ -35,24 +42,9 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
 
   @override
   Future<void> calculateSpeed() async {
-    var latestPing = 0.0;
-    var latestJitter = 0.0;
-    var startTime = DateTime.now();
-    var started = false;
-
-    channels.forEach((channel) {
-      channel.sink.add(IsolateEvent.start);
-
-      channel.stream.listen((message) {
-        if (!started) {
-          started = true;
-          startTime = DateTime.now();
-        }
-        var vals = (message as String).split('-');
-        latestPing = double.parse(vals[0]);
-        latestJitter = double.parse(vals[1]);
-      });
-    });
+    reset();
+    attachErrorHandlers();
+    attachIsolateListeners();
 
     while (!abortTest) {
       await Future.delayed(Duration(milliseconds: updateIntervalMs));
@@ -68,8 +60,48 @@ class PJIsolateController extends IsolateController implements PingJitterTest {
         _pingController.add(latestPing);
         _jitterController.add(latestJitter);
         _percentController.add(elapsedMs / testDurationMs);
+      } else {
+        latestPing = 0.0;
+        latestJitter = 0.0;
+        startTime = DateTime.now();
       }
     }
+  }
+
+  void attachIsolateListeners() {
+    channels.forEach((channel) {
+      channel.sink.add(IsolateEvent.start);
+      channel.stream.listen((message) {
+        if (!started) {
+          started = true;
+          startTime = DateTime.now();
+        }
+        var vals = (message as String).split('-');
+        latestPing = double.parse(vals[0]);
+        latestJitter = double.parse(vals[1]);
+      });
+    });
+  }
+
+  void attachErrorHandlers() {
+    errorRPorts.forEach((rPort) {
+      // errors come through as a two item array and as a standard object
+      rPort.listen((message) {
+        var exceptionStr = message[0] as String;
+        var e = parseExecption(exceptionStr);
+        _pingController.addError(e);
+        _jitterController.addError(e);
+        abort();
+      });
+    });
+  }
+
+  @override
+  void reset() {
+    latestPing = 0.0;
+    latestJitter = 0.0;
+    startTime = DateTime.now();
+    started = false;
   }
 
   @override
